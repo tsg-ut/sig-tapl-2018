@@ -1,14 +1,14 @@
 .input-lam {
-  font-family: monospace;
+  font-family: courier;
   width: 50em;
   height: 20em;
 }
 
 .output-lam {
-  font-family: monospace;
+  font-family: courier;
 }
 
 .output-error {
   color: #c33;
-  font-family: monospace;
+  font-family: courier;
 }
