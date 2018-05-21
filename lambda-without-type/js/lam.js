@@ -40,9 +40,73 @@ export function uniqueVar(tree, { viLast = new Map(), viStack = new Map() } = {}
   }
 }
 
+
+// AbsTreeのargがstringなのはブチギレ案件です（VarTreeにするとif文が減ります）
+function Change(tree, from, to) {
+  console.log("Change");
+  console.log(tree);
+  console.log(from);
+  console.log(to);
+  if (tree instanceof VarTree) {
+    if (tree.name == from) {
+      return to;
+    }
+    else {
+      return tree;
+    }
+  }
+  else if (tree instanceof AbsTree) {
+    if (tree.arg == from) {
+      return new AbsTree({}, to, Change(tree.body, from, to));
+    }
+    else {
+      return new AbsTree({}, tree.arg, Change(tree.body, from, to));
+    }
+  }
+  else if (tree instanceof AppTree) {
+    return new AppTree({}, Change(tree.fn, from, to), Change(tree.arg, from, to));
+  }
+  else {
+    return tree;
+  }
+}
+
+function Apply(tree) {
+  console.log("Apply");
+  console.log(tree);
+  if (tree instanceof AppTree) {
+    console.log("AppTree");
+  }
+  else if(tree instanceof VarTree) {
+    console.log("VarTree");
+  }
+  else if(tree instanceof AbsTree) {
+    console.log("AbsTree");
+  }
+  else {
+    console.log("Else");
+  }
+  if (tree instanceof AppTree) {
+    if (tree.fn instanceof AbsTree) {
+      return Change(tree.fn.body, tree.fn.arg, tree.arg);
+    }
+    else {
+      return new AppTree({}, Apply(tree.fn), Apply(tree.arg));
+    }
+  }
+  else {
+    return tree;
+  }
+}
+
 export function evalSteps(tree) {
   const steps = [];
-  steps.push(new AppTree({}, new AbsTree({}, 'a$1', new VarTree({}, 'a$1')), new VarTree({}, 'a$2')));
-  steps.push(new VarTree({}, 'a$2'));
+  for(let i = 0; i < 100; i++) {
+    console.log(i);
+    console.log(tree);
+    steps.push(tree);
+    let change=tree;
+    tree = Apply(tree);
+  }
   return steps;
 }

@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
     el: '#app',
 
     data: {
-      inputLam: '(\\m.\\n.m n) (\\s.\\z.s (s z)) (\\s.\\z.s (s (s z)))',
+      inputLam: '(\\m.\\n.m n) (\\s.\\z.s (s z)) (\\s.\\z.s (s (s z))) s z',
       outputError: '',
     },
 
