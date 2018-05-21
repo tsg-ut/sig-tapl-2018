@@ -1,0 +1,31 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script src="js/view.js" type="module"></script>
+  </head>
+  <body>
+    <div id="app">
+      <textarea v-model="inputLam" class="input-lam"></textarea>
+      <div v-if="lamTree" class="output-lam">
+        <p>
+          {{ lamTree.toString() }}
+        </p>
+        <p>
+          {{ uniqueLamTree.toString() }}
+        </p>
+        実行ステップ:
+        <ul>
+          <li v-for="step in evalSteps" :key="step.toString()">
+            {{ step.toString() }}
+          </li>
+        </ul>
+      </div>
+      <div v-else-if="outputError" class="output-error">
+        {{ outputError }}
+      </div>
+    </div>
+  </body>
+</html>
