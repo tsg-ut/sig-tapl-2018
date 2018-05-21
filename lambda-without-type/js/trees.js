@@ -6,6 +6,10 @@ export class AST {
     this.pos = info.pos;
     this.highlighted = info.highlighted;
   }
+
+  toString() {
+    return this.toHighlightedString().map(v => v.str).join('');
+  }
 }
 
 export class VarTree extends AST {
@@ -15,7 +19,9 @@ export class VarTree extends AST {
     Object.freeze(this);
   }
 
-  toString() { return this.name; }
+  toHighlightedString() {
+    return [{ hl: this.highlighted, str: this.name }];
+  }
   toTreeString() { return `Var(${this.name})`; }
 }
 
@@ -33,6 +39,15 @@ export class AbsTree extends AST {
     return s;
   }
 
+  toHighlightedString({ isLast = true } = {}) {
+    return [
+      { hl: this.highlighted === true, str: isLast ? '' : '('},
+      { hl: this.highlighted, str: `\\${this.arg}.` },
+      ...this.body.toHighlightedString({ isFirst: true, isLast: true }),
+      { hl: this.highlighted === true, str: isLast ? '' : ')'},
+    ];
+  }
+
   toTreeString() { return `Abs(${this.arg}, ${this.body.toTreeString()})`; }
 }
 
@@ -44,13 +59,14 @@ export class AppTree extends AST {
     Object.freeze(this);
   }
 
-  toString({ isFirst = true, isLast = true } = {}) {
-    const fnStr = this.fn.toString({ isFirst: true, isLast: false });
-    const argStr = this.arg.toString({ isFirst: false, isLast: isLast || !isFirst });
-
-    let s = `${fnStr} ${argStr}`;
-    if(!isFirst) s = `(${s})`;
-    return s;
+  toHighlightedString({ isFirst = true, isLast = true } = {}) {
+    return [
+      { hl: this.highlighted === true, str: isFirst ? '' : '('},
+      ...this.fn.toHighlightedString({ isFirst: true, isLast: false }),
+      { hl: this.highlighted, str: ' '},
+      ...this.arg.toHighlightedString({ isFirst: false, isLast: isLast || !isFirst }),
+      { hl: this.highlighted === true, str: isFirst ? '' : ')'},
+    ];
   }
 
   toTreeString() { return `App(${this.fn.toTreeString()}, ${this.arg.toTreeString()})`; }

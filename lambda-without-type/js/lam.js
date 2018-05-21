@@ -40,48 +40,113 @@ export function uniqueVar(tree, { viLast = new Map(), viStack = new Map() } = {}
   }
 }
 
+function highlightRec(highlighted, tree) {
+  if(tree instanceof VarTree) {
+    return highlight(highlighted, tree);
+  } else if(tree instanceof AppTree) {
+    return highlight(highlighted,
+      new AppTree(tree.info, highlightRec(highlighted, tree.fn), highlightRec(highlighted, tree.arg))
+    );
+  } else {
+    return highlight(highlighted,
+      new AbsTree(tree.info, tree.arg, highlightRec(highlighted, tree.body))
+    );
+  }
+}
+
+function highlight(highlighted, tree) {
+  const info = Object.assign({}, tree.info, { highlighted })
+  if(tree instanceof VarTree) {
+    return new VarTree(info, tree.name);
+  } else if(tree instanceof AppTree) {
+    return new AppTree(info, tree.fn, tree.arg);
+  } else {
+    return new AbsTree(info, tree.arg, tree.body);
+  }
+}
+
 function assign(tree, from, to) {
   if(tree instanceof VarTree) {
     if(tree.name === from) {
-      return to;
+      return {
+        oldTree: highlightRec(true, tree),
+        newTree: highlightRec(true, to),
+      };
     } else {
-      return tree;
+      return {
+        oldTree: tree,
+        newTree: tree,
+      };
     }
   } else if(tree instanceof AppTree) {
-    return new AppTree(tree.info, assign(tree.fn, from, to), assign(tree.arg, from, to));
+    const { oldTree: oldFn, newTree: newFn } = assign(tree.fn, from, to);
+    const { oldTree: oldArg, newTree: newArg } = assign(tree.arg, from, to);
+    return {
+      oldTree: new AppTree(tree.info, oldFn, oldArg),
+      newTree: new AppTree(tree.info, newFn, newArg),
+    };
   } else {
     if(tree.arg === from) {
       // 内部に同名の変数がある
-      return tree;
+      return {
+        oldTree: tree,
+        newTree: tree,
+      };
     }
-    return new AbsTree(tree.info, tree.arg, assign(tree.body, from, to));
+    const { oldTree: oldBody, newTree: newBody } = assign(tree.body, from, to);
+    return {
+      oldTree: new AbsTree(tree.info, tree.arg, oldBody),
+      newTree: new AbsTree(tree.info, tree.arg, newBody),
+    };
   }
 }
 
 function evalStep(tree) {
+  tree = highlightRec(false, tree);
+
   if(tree instanceof AppTree) {
     if(tree.fn instanceof AbsTree) {
-      return { newTree: assign(tree.fn.body, tree.fn.arg, tree.arg), changed: true };
+      const { oldTree: oldBody, newTree: newBody } = assign(tree.fn.body, tree.fn.arg, tree.arg);
+      return {
+        oldTree: new AppTree(
+          tree.info,
+          highlight('except-parens', new AbsTree(tree.fn.info, tree.fn.arg, oldBody)),
+          highlightRec(true, tree.arg),
+        ),
+        newTree: newBody,
+        changed: true,
+      };
     } else {
-      const { newTree: newFn, changed: changedFn } = evalStep(tree.fn);
+      const { oldTree: oldFn, newTree: newFn, changed: changedFn } = evalStep(tree.fn);
       if(changedFn) {
-        return { newTree: new AppTree(tree.info, newFn, tree.arg), changed: true };
+        return {
+          oldTree: new AppTree(tree.info, oldFn, tree.arg),
+          newTree: new AppTree(tree.info, newFn, tree.arg),
+          changed: true
+        };
       }
-      const { newTree: newArg, changed: changedArg } = evalStep(tree.arg);
+      const { oldTree: oldArg, newTree: newArg, changed: changedArg } = evalStep(tree.arg);
       if(changedArg) {
-        return { newTree: new AppTree(tree.info, tree.fn, newArg), changed: true };
+        return {
+          oldTree: new AppTree(tree.info, tree.fn, oldArg),
+          newTree: new AppTree(tree.info, tree.fn, newArg),
+          changed: true,
+        };
       }
     }
   }
-  return { newTree: tree, changed: false };
+  return { oldTree: tree, newTree: tree, changed: false };
 }
 
 export function evalSteps(tree) {
-  const steps = [tree];
-  while(true) {
-    const { newTree, changed } = evalStep(steps[steps.length - 1]);
+  const steps = [];
+  let last = tree;
+  for(let i = 0; i < 1000; ++i) {
+    const { oldTree, newTree, changed } = evalStep(last);
+    steps.push(oldTree);
     if(!changed) break;
     steps.push(newTree);
+    last = newTree;
   }
   return steps;
 }

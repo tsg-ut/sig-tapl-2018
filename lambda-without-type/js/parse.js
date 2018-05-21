@@ -40,11 +40,11 @@ export function parse(program, startPos = 0) {
     let currentTree;
     if(match[1]) {
       // var
-      currentTree = new VarTree(si, match[1]);
+      currentTree = new VarTree({ pos: si }, match[1]);
     } else if(match[2]) {
       // lambda
       const j = parensEnd(li);
-      currentTree = new AbsTree(si, match[2], parse(program.slice(li, j), startPos + li));
+      currentTree = new AbsTree({ pos: si }, match[2], parse(program.slice(li, j), startPos + li));
       li = j + 1;
     } else if(match[3]) {
       // apply
@@ -57,7 +57,7 @@ export function parse(program, startPos = 0) {
     }
 
     if(retTree) {
-      retTree = new AppTree(si, retTree, currentTree);
+      retTree = new AppTree({ pos: si }, retTree, currentTree);
     } else {
       retTree = currentTree;
     }

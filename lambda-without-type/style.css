@@ -12,3 +12,13 @@
   color: #c33;
   font-family: monospace;
 }
+
+.step.after {
+  margin-bottom: 0.5em;
+}
+.step.before .step-part.highlighted {
+  color: #33c;
+}
+.step.after .step-part.highlighted {
+  color: #c33;
+}

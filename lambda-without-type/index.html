@@ -18,8 +18,16 @@
         </p>
         実行ステップ:
         <ul>
-          <li v-for="step in evalSteps" :key="step.toString()">
-            {{ step.toString() }}
+          <li
+            v-for="(step, i) in evalSteps"
+            class="step"
+            :class="{ before: i % 2 == 0, after: i % 2 == 1 }"
+          >
+            <span
+              v-for="{ hl, str } in step.toHighlightedString()"
+              class="step-part"
+              :class="{ highlighted: hl }"
+            >{{ str }}</span>
           </li>
         </ul>
       </div>

@@ -22,10 +22,14 @@ document.addEventListener('DOMContentLoaded', () => {
       },
 
       uniqueLamTree() {
-        return this.lamTree && Lam.uniqueVar(this.lamTree);
+        if(!this.lamTree) return null;
+        return Lam.uniqueVar(this.lamTree);
       },
 
       evalSteps() {
+        if(!this.lamTree) return null;
+        console.log(Lam.evalSteps(this.uniqueLamTree));
+        console.log(Lam.evalSteps(this.uniqueLamTree).map(a=>a.toHighlightedString()));
         return Lam.evalSteps(this.uniqueLamTree);
       },
     },
