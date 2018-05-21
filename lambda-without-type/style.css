@@ -17,8 +17,10 @@
   margin-bottom: 0.5em;
 }
 .step.before .step-part.highlighted {
+  background: #eef;
   color: #33c;
 }
 .step.after .step-part.highlighted {
+  background: #fee;
   color: #c33;
 }
